@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
 
 class PetaLaporanController extends Controller
 {
-    private const int MAX_MARKERS = 500;
+    /** @var int */
+    private const MAX_MARKERS = 500;
 
     public function __invoke(Request $request): JsonResponse
     {

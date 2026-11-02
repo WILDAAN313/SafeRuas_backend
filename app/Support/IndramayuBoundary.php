@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -19,9 +20,11 @@ use WeakMap;
  */
 class IndramayuBoundary
 {
-    private const int BUCKET_COUNT = 128;
+    /** @var int */
+    private const BUCKET_COUNT = 128;
 
-    private const float EPSILON = 1.0e-10;
+    /** @var float */
+    private const EPSILON = 1.0e-10;
 
     /** @var list<list<Ring>> */
     private array $rings = [];
@@ -192,6 +195,7 @@ class IndramayuBoundary
     /** @param Builder<Model> $query */
     public function constrain(Builder $query): void
     {
+        /** @var Connection $connection */
         $connection = $query->getConnection();
         $latitude = $query->getModel()->qualifyColumn('latitude');
         $longitude = $query->getModel()->qualifyColumn('longitude');

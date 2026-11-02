@@ -19,7 +19,8 @@ use Illuminate\Validation\ValidationException;
 #[Description('Membuat akun superadmin melalui terminal dengan password tersembunyi')]
 class CreateSuperAdminCommand extends Command
 {
-    private const string EMAIL_ALREADY_USED = 'Email tersebut sudah digunakan. Akun yang ada tidak diubah.';
+    /** @var string */
+    private const EMAIL_ALREADY_USED = 'Email tersebut sudah digunakan. Akun yang ada tidak diubah.';
 
     public function handle(): int
     {
