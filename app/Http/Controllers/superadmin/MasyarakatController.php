@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Laporan;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class MasyarakatController extends Controller
@@ -16,9 +17,11 @@ class MasyarakatController extends Controller
             'cari' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $query = User::query()->where('role', 'masyarakat');
+        $query = User::query()->where('role', 'masyarakat')->withCount([
+            'laporan' => fn (Builder $query): Builder => $query->withinIndramayu(),
+        ]);
 
-        if (! empty($filters['cari'])) {
+        if (isset($filters['cari']) && trim($filters['cari']) !== '') {
             $search = trim($filters['cari']);
             $query->where(function ($builder) use ($search): void {
                 $builder->where('name', 'like', "%{$search}%")
@@ -26,7 +29,7 @@ class MasyarakatController extends Controller
             });
         }
 
-        $masyarakat = $query->orderBy('name')->paginate(15)->withQueryString();
+        $masyarakat = $query->orderBy('name')->orderBy('id')->paginate(15)->withQueryString();
 
         return view('superadmin.masyarakat.index', compact('masyarakat'));
     }
@@ -36,9 +39,12 @@ class MasyarakatController extends Controller
         abort_unless($user->role === 'masyarakat', 404);
 
         $laporan = Laporan::query()
+            ->withinIndramayu()
             ->where('user_id', $user->id)
+            ->with('instansi:id,nama_instansi')
             ->latest()
-            ->paginate(10);
+            ->orderByDesc('id')
+            ->paginate(10, ['id', 'instansi_id', 'judul', 'kategori', 'status', 'created_at']);
 
         return view('superadmin.masyarakat.show', [
             'masyarakat' => $user,

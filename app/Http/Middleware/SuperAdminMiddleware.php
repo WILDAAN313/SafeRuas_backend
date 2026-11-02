@@ -27,7 +27,7 @@ class SuperAdminMiddleware
         }
 
         if ($user->role !== 'super_admin') {
-            if ($user->role === 'admin_instansi') {
+            if ($user->role === 'admin_instansi' && ! $request->expectsJson()) {
                 return redirect()->route('admin.dashboard');
             }
 

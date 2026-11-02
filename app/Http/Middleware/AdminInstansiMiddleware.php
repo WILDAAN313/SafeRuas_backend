@@ -12,6 +12,10 @@ class AdminInstansiMiddleware
     {
         $user = $request->user();
 
+        if ($user?->role === 'developer') {
+            return $next($request);
+        }
+
         abort_unless($user !== null && $user->role === 'admin_instansi', 403, 'Akses ditolak.');
         abort_if($user->instansi_id === null, 403, 'Akun admin belum dihubungkan ke instansi.');
 

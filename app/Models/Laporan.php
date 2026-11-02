@@ -2,12 +2,20 @@
 
 namespace App\Models;
 
+use App\Support\IndramayuBoundary;
+use Database\Factories\LaporanFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Laporan extends Model
 {
+    /** @use HasFactory<LaporanFactory> */
+    use HasFactory;
+
     protected $table = 'laporan';
 
     protected $fillable = [
@@ -22,6 +30,18 @@ class Laporan extends Model
         'alamat_lokasi',
         'status',
     ];
+
+    /** @param Builder<static> $query */
+    #[Scope]
+    protected function withinIndramayu(Builder $query): void
+    {
+        app(IndramayuBoundary::class)->constrain($query);
+    }
+
+    public function isWithinIndramayu(): bool
+    {
+        return app(IndramayuBoundary::class)->contains($this->latitude, $this->longitude);
+    }
 
     public function pelapor(): BelongsTo
     {

@@ -13,7 +13,7 @@
 </head>
 <body class="m-0 bg-[#f6f8fc] font-[Inter,ui-sans-serif,system-ui,sans-serif] text-[13px] text-[#17243b]">
 <div class="min-h-screen">
-    <aside class="fixed inset-y-0 left-0 z-[100] flex w-[250px] flex-col border-r border-[#e8edf5] bg-white px-4 pt-[25px] pb-[15px] transition-transform duration-300 ease-in-out max-[1000px]:w-[220px] max-[800px]:w-[250px] max-[800px]:-translate-x-full data-[open=true]:max-[800px]:translate-x-0" id="sidebar">
+    <aside class="fixed inset-y-0 left-0 z-[100] flex w-[250px] flex-col overflow-y-auto border-r border-[#e8edf5] bg-white px-4 pt-[25px] pb-[15px] transition-transform duration-300 ease-in-out max-[1000px]:w-[220px] max-[800px]:w-[250px] max-[800px]:-translate-x-full data-[open]:max-[800px]:translate-x-0" id="sidebar">
         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-[11px] px-[10px] pb-[30px] text-inherit no-underline">
             <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#2563eb] text-white">
                 <svg class="h-[25px] w-[25px]" viewBox="0 0 24 24" fill="none">
@@ -58,11 +58,14 @@
                     <strong class="block overflow-hidden text-ellipsis whitespace-nowrap text-[10px]">{{ auth()->user()->name ?? 'Administrator' }}</strong>
                     <span class="mt-1 block text-[10px] text-[#7d8aa0]">Admin Instansi</span>
                 </div>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="grid h-[34px] w-[34px] place-items-center rounded-[9px] border-0 bg-transparent text-[#7d8aa0] hover:bg-[#eff6ff] hover:text-[#2563eb]" title="Keluar" aria-label="Keluar">⟵</button>
-                </form>
             </div>
+            <form action="{{ route('logout') }}" method="POST" class="mt-3">
+                @csrf
+                <button type="submit" class="flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-[9px] border border-red-100 bg-red-50 px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" aria-label="Logout dari akun">
+                    <svg viewBox="0 0 24 24" fill="none" class="size-4" aria-hidden="true"><path d="M10 4H4v16h6m4-13 5 5-5 5m-6-5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span>Logout</span>
+                </button>
+            </form>
         </div>
     </aside>
 

@@ -1,0 +1,118 @@
+.report-map-marker {
+    background: transparent;
+    border: 0;
+}
+
+.report-map-pin {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    transform: rotate(-45deg);
+    border: 3px solid white;
+    border-radius: 50% 50% 50% 0;
+    background: #64748b;
+    box-shadow: 0 3px 10px #172b4d40;
+}
+
+.report-map-pin > span {
+    transform: rotate(45deg);
+    color: white;
+    font: 700 11px/1 system-ui, sans-serif;
+}
+
+.report-map-pin--menunggu { background: #d97706; }
+.report-map-pin--diproses { background: #2563eb; }
+.report-map-pin--selesai { background: #059669; }
+
+#report-map,
+#report-map .leaflet-popup-content {
+    font-family: inherit;
+}
+
+#report-map .leaflet-control-layers {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #172b4d1a;
+    color: #475569;
+    font: inherit;
+}
+
+#report-map .leaflet-control-layers label {
+    padding: 4px 0;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#report-map .leaflet-control-layers-selector {
+    margin-right: 5px;
+    accent-color: #2563eb;
+}
+
+#report-map .leaflet-bottom.leaflet-right {
+    max-width: 100%;
+}
+
+#report-map .leaflet-control-attribution {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+#report-map .leaflet-popup-content-wrapper,
+#report-map .leaflet-popup-tip {
+    background: #fff;
+    color: #172b4d;
+    box-shadow: 0 4px 24px #172b4d30;
+}
+
+#report-map .leaflet-popup-content {
+    margin: 0;
+}
+
+.report-map-popup {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 18px;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.report-map-popup article + article {
+    padding-top: 14px;
+    margin-top: 14px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.report-map-popup h3 {
+    margin: 0 0 6px;
+    color: #172b4d;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.report-map-popup p {
+    margin: 5px 0;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.report-map-popup a {
+    display: inline-block;
+    margin-top: 8px;
+    color: #1d4ed8;
+    font-weight: 700;
+}
+
+#report-map-panel:fullscreen {
+    overflow: auto;
+    border: 0;
+    border-radius: 0;
+    background: white;
+}
+
+#report-map-panel:fullscreen #report-map {
+    height: calc(100vh - 220px);
+    min-height: 350px;
+}

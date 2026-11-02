@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\IndramayuBoundary;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +12,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(IndramayuBoundary::class, static fn (): IndramayuBoundary => IndramayuBoundary::fromGeoJsonFile(resource_path('indramayu.geojson')));
     }
 
     /**

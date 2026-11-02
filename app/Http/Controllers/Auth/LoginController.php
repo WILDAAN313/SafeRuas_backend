@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,9 +16,11 @@ class LoginController extends Controller
         $user = $request->user();
 
         if ($user !== null) {
-            abort_unless(in_array($user->role, ['admin_instansi', 'developer'], true), 403, 'Akses ditolak.');
+            $dashboardRoute = $this->dashboardRoute($user);
 
-            return redirect()->route('admin.dashboard');
+            abort_if($dashboardRoute === null, 403, 'Akses ditolak.');
+
+            return redirect()->route($dashboardRoute);
         }
 
         return view('welcome');
@@ -30,7 +33,7 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::attempt([...$credentials, 'is_active' => true], $request->boolean('remember'))) {
             return back()
                 ->withErrors(['email' => 'Email atau password tidak benar.'])
                 ->onlyInput('email');
@@ -38,7 +41,9 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        if (! in_array($request->user()?->role, ['admin_instansi', 'developer'], true)) {
+        $dashboardRoute = $this->dashboardRoute($request->user());
+
+        if ($dashboardRoute === null) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -48,7 +53,7 @@ class LoginController extends Controller
                 ->onlyInput('email');
         }
 
-        return redirect()->intended(route('admin.dashboard'));
+        return redirect()->intended(route($dashboardRoute));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -59,5 +64,14 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    private function dashboardRoute(?User $user): ?string
+    {
+        return match ($user?->role) {
+            'super_admin' => 'superadmin.dashboard',
+            'admin_instansi', 'developer' => 'admin.dashboard',
+            default => null,
+        };
     }
 }

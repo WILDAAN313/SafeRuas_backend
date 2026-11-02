@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\superadmin\SaveAdminInstansiRequest;
 use App\Models\Instansi;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AdminInstansiController extends Controller
 {
@@ -23,7 +25,7 @@ class AdminInstansiController extends Controller
             ->with('instansi:id,nama_instansi')
             ->where('role', 'admin_instansi');
 
-        if (! empty($filters['cari'])) {
+        if (isset($filters['cari']) && trim($filters['cari']) !== '') {
             $search = trim($filters['cari']);
             $query->where(function ($builder) use ($search): void {
                 $builder->where('name', 'like', "%{$search}%")
@@ -31,37 +33,25 @@ class AdminInstansiController extends Controller
             });
         }
 
-        $adminInstansi = $query->orderBy('name')->paginate(15)->withQueryString();
+        $adminInstansi = $query->orderBy('name')->orderBy('id')->paginate(15)->withQueryString();
 
         return view('superadmin.admin_instansi.index', compact('adminInstansi'));
     }
 
     public function create(): View
     {
-        $instansi = Instansi::query()->orderBy('id')->firstOrFail();
+        $instansiList = Instansi::query()->orderBy('nama_instansi')->orderBy('id')->get(['id', 'nama_instansi']);
 
-        return view('superadmin.admin_instansi.create', compact('instansi'));
+        return view('superadmin.admin_instansi.create', compact('instansiList'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SaveAdminInstansiRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        $admin = new User(['role' => 'admin_instansi']);
+        $this->saveAccount($admin, $request->validated());
 
-        $instansi = Instansi::query()->orderBy('id')->firstOrFail();
-
-        User::query()->create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'admin_instansi',
-            'instansi_id' => $instansi->id,
-        ]);
-
-        return back()->with('success', 'Akun admin instansi berhasil dibuat.');
+        return redirect()->route('superadmin.admin_instansi.show', $admin)
+            ->with('success', 'Akun Admin Instansi berhasil dibuat.');
     }
 
     public function show(User $user): View
@@ -69,6 +59,7 @@ class AdminInstansiController extends Controller
         abort_unless($user->role === 'admin_instansi', 404);
 
         $user->load('instansi:id,nama_instansi');
+        $user->loadCount(['riwayatStatus', 'penugasanDibuat']);
 
         return view('superadmin.admin_instansi.show', ['adminInstansi' => $user]);
     }
@@ -77,33 +68,63 @@ class AdminInstansiController extends Controller
     {
         abort_unless($user->role === 'admin_instansi', 404);
 
-        return view('superadmin.admin_instansi.edit', ['adminInstansi' => $user]);
+        $instansiList = Instansi::query()->orderBy('nama_instansi')->orderBy('id')->get(['id', 'nama_instansi']);
+
+        return view('superadmin.admin_instansi.edit', ['adminInstansi' => $user, 'instansiList' => $instansiList]);
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(SaveAdminInstansiRequest $request, User $user): RedirectResponse
     {
         abort_unless($user->role === 'admin_instansi', 404);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        $this->saveAccount($user, $request->validated());
+
+        return redirect()->route('superadmin.admin_instansi.show', $user)
+            ->with('success', 'Data Admin Instansi berhasil diperbarui.');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        abort_unless($user->role === 'admin_instansi', 404);
+
+        DB::transaction(function () use ($user): void {
+            $admin = User::query()->lockForUpdate()->findOrFail($user->id);
+            abort_unless($admin->role === 'admin_instansi', 404);
+
+            if ($admin->riwayatStatus()->exists() || $admin->penugasanDibuat()->exists()
+                || $admin->penugasanPetugas()->exists() || $admin->laporan()->exists()) {
+                throw ValidationException::withMessages([
+                    'akun' => 'Akun memiliki riwayat terkait dan tidak dapat dihapus. Nonaktifkan akun untuk menjaga riwayat.',
+                ]);
+            }
+
+            $admin->delete();
+        });
+
+        return redirect()->route('superadmin.admin_instansi.index')
+            ->with('success', 'Akun Admin Instansi berhasil dihapus.');
+    }
+
+    /**
+     * @param  array{name: string, email: string, instansi_id: int|string, is_active: bool|int|string, password?: ?string}  $data
+     */
+    private function saveAccount(User $user, array $data): void
+    {
+        $user->fill([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'instansi_id' => (int) $data['instansi_id'],
+            'is_active' => (bool) $data['is_active'],
         ]);
 
-        $user->name = $validated['name'];
-        $user->email = $validated['email'];
-
-        if (! empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
+        if (isset($data['password']) && $data['password'] !== '') {
+            $user->password = $data['password'];
         }
 
-        $user->save();
-
-        return back()->with('success', 'Data admin instansi berhasil diperbarui.');
+        try {
+            $user->save();
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages(['email' => 'Email tersebut sudah digunakan.']);
+        }
     }
 }

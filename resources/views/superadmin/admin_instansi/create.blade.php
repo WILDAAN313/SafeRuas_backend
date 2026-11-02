@@ -1,0 +1,21 @@
+@extends('superadmin.layouts.app')
+
+@section('title', 'Tambah Admin Instansi')
+@section('breadcrumb', 'Tambah Admin Instansi')
+
+@section('content')
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4"><div><h1 class="text-2xl font-extrabold">Tambah Admin Instansi</h1><p class="mt-2 text-sm text-slate-500">Buat akun dan hubungkan ke instansi yang sesuai.</p></div><a href="{{ route('superadmin.admin_instansi.index') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-600">Kembali ke daftar</a></div>
+    @if ($instansiList->isEmpty())<p role="status" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Belum ada data instansi. Siapkan data instansi terlebih dahulu sebelum membuat akun admin.</p>@endif
+    <form method="POST" action="{{ route('superadmin.admin_instansi.store') }}" class="grid max-w-3xl gap-5 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        @csrf
+        <label class="grid gap-2 text-xs font-semibold text-slate-600">Nama lengkap<input name="name" value="{{ old('name') }}" required maxlength="255" autocomplete="name" class="rounded-lg border border-slate-200 px-3 py-3 text-sm"></label>
+        <label class="grid gap-2 text-xs font-semibold text-slate-600">Email<input type="email" name="email" value="{{ old('email') }}" required maxlength="255" autocomplete="email" class="rounded-lg border border-slate-200 px-3 py-3 text-sm"></label>
+        <label class="grid gap-2 text-xs font-semibold text-slate-600">Instansi<select name="instansi_id" required class="rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm"><option value="">Pilih instansi</option>@foreach ($instansiList as $instansi)<option value="{{ $instansi->id }}" @selected((string) old('instansi_id') === (string) $instansi->id)>{{ $instansi->nama_instansi }}</option>@endforeach</select></label>
+        <label class="grid gap-2 text-xs font-semibold text-slate-600">Status akun<select name="is_active" required class="rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm"><option value="1" @selected((string) old('is_active', 1) === '1')>Aktif</option><option value="0" @selected((string) old('is_active', 1) === '0')>Nonaktif</option></select></label>
+        <div class="grid gap-5 sm:grid-cols-2">
+            <label class="grid gap-2 text-xs font-semibold text-slate-600">Password<input type="password" name="password" required minlength="8" autocomplete="new-password" class="rounded-lg border border-slate-200 px-3 py-3 text-sm"><span class="text-[11px] font-normal text-slate-400">Minimal 8 karakter.</span></label>
+            <label class="grid content-start gap-2 text-xs font-semibold text-slate-600">Konfirmasi password<input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password" class="rounded-lg border border-slate-200 px-3 py-3 text-sm"></label>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5"><button type="submit" @disabled($instansiList->isEmpty()) class="cursor-pointer rounded-lg bg-blue-600 px-5 py-3 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">Simpan akun</button><a href="{{ route('superadmin.admin_instansi.index') }}" class="px-3 py-3 text-xs font-semibold text-slate-500">Batal</a></div>
+    </form>
+@endsection

@@ -17,7 +17,7 @@ class LaporanController extends Controller
             'kategori' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $query = Laporan::query()->with('pelapor:id,name,email');
+        $query = Laporan::query()->withinIndramayu()->with('pelapor:id,name,email');
 
         if (! empty($filters['cari'])) {
             $search = trim($filters['cari']);
@@ -38,8 +38,11 @@ class LaporanController extends Controller
             $query->where('kategori', $filters['kategori']);
         }
 
-        $laporan = $query->latest()->paginate(15)->withQueryString();
+        $laporan = $query->latest()->orderByDesc('id')
+            ->paginate(15, ['id', 'user_id', 'judul', 'kategori', 'alamat_lokasi', 'status', 'created_at'])
+            ->withQueryString();
         $kategoriList = Laporan::query()
+            ->withinIndramayu()
             ->whereNotNull('kategori')
             ->where('kategori', '!=', '')
             ->distinct()
@@ -51,6 +54,8 @@ class LaporanController extends Controller
 
     public function show(Laporan $laporan): View
     {
+        abort_unless($laporan->isWithinIndramayu(), 404);
+
         $laporan->load([
             'pelapor:id,name,email',
             'instansi:id,nama_instansi',

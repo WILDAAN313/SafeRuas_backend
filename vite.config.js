@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/admin-dashboard.js',
                 'resources/js/admin-laporan.js',
+                'resources/js/superadmin-map.js',
             ],
             refresh: true,
             fonts: [
