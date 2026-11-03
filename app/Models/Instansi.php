@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Instansi extends Model
 {
+    public const NAMA_PEMDA_INDRAMAYU = 'Pemda Kabupaten Indramayu';
+
     /** @use HasFactory<InstansiFactory> */
     use HasFactory;
 

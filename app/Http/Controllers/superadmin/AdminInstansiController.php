@@ -19,6 +19,7 @@ class AdminInstansiController extends Controller
     {
         $filters = $request->validate([
             'cari' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:aktif,nonaktif'],
         ]);
 
         $query = User::query()
@@ -29,18 +30,37 @@ class AdminInstansiController extends Controller
             $search = trim($filters['cari']);
             $query->where(function ($builder) use ($search): void {
                 $builder->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('instansi', fn ($instansiQuery) => $instansiQuery->where('nama_instansi', 'like', "%{$search}%"));
             });
         }
 
-        $adminInstansi = $query->orderBy('name')->orderBy('id')->paginate(15)->withQueryString();
+        if (($filters['status'] ?? null) === 'aktif') {
+            $query->where('is_active', true);
+        } elseif (($filters['status'] ?? null) === 'nonaktif') {
+            $query->where('is_active', false);
+        }
 
-        return view('superadmin.admin_instansi.index', compact('adminInstansi'));
+        $adminInstansi = $query->orderBy('name')->orderBy('id')->paginate(15)->withQueryString();
+        $jumlahAkun = User::query()
+            ->where('role', 'admin_instansi')
+            ->selectRaw('COUNT(*) AS total, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS aktif, SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) AS nonaktif, COUNT(DISTINCT instansi_id) AS instansi_terhubung')
+            ->first();
+        $ringkasan = (object) [
+            'total' => (int) ($jumlahAkun->total ?? 0),
+            'aktif' => (int) ($jumlahAkun->aktif ?? 0),
+            'nonaktif' => (int) ($jumlahAkun->nonaktif ?? 0),
+            'instansiTerhubung' => (int) ($jumlahAkun->instansi_terhubung ?? 0),
+        ];
+
+        return view('superadmin.admin_instansi.index', compact('adminInstansi', 'ringkasan'));
     }
 
     public function create(): View
     {
-        $instansiList = Instansi::query()->orderBy('nama_instansi')->orderBy('id')->get(['id', 'nama_instansi']);
+        $instansiList = Instansi::query()
+            ->where('nama_instansi', Instansi::NAMA_PEMDA_INDRAMAYU)
+            ->get(['id', 'nama_instansi']);
 
         return view('superadmin.admin_instansi.create', compact('instansiList'));
     }
@@ -68,7 +88,9 @@ class AdminInstansiController extends Controller
     {
         abort_unless($user->role === 'admin_instansi', 404);
 
-        $instansiList = Instansi::query()->orderBy('nama_instansi')->orderBy('id')->get(['id', 'nama_instansi']);
+        $instansiList = Instansi::query()
+            ->where('nama_instansi', Instansi::NAMA_PEMDA_INDRAMAYU)
+            ->get(['id', 'nama_instansi']);
 
         return view('superadmin.admin_instansi.edit', ['adminInstansi' => $user, 'instansiList' => $instansiList]);
     }

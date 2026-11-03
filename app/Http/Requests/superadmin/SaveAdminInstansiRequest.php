@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\superadmin;
 
+use App\Models\Instansi;
 use App\Models\User;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -33,7 +34,11 @@ class SaveAdminInstansiRequest extends FormRequest
                 'required', 'email', 'max:255',
                 Rule::unique(User::class, 'email')->ignore($admin instanceof User ? $admin : null),
             ],
-            'instansi_id' => ['required', 'integer', Rule::exists('instansi', 'id')],
+            'instansi_id' => [
+                'required',
+                'integer',
+                Rule::exists('instansi', 'id')->where('nama_instansi', Instansi::NAMA_PEMDA_INDRAMAYU),
+            ],
             'is_active' => ['required', 'boolean'],
             'password' => [
                 'bail', $this->isMethod('POST') ? 'required' : 'nullable', 'string', 'min:8', 'confirmed',

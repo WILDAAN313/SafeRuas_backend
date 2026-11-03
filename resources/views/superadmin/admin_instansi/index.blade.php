@@ -4,37 +4,23 @@
 @section('breadcrumb', 'Admin Instansi')
 
 @section('content')
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div><h1 class="text-2xl font-extrabold">Admin Instansi</h1><p class="mt-2 text-sm text-slate-500">Kelola akun yang bertanggung jawab menangani laporan masyarakat.</p></div>
-        <a href="{{ route('superadmin.admin_instansi.create') }}" class="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Tambah Admin Instansi</a>
-    </div>
-    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white" aria-label="Daftar Admin Instansi">
-        <form action="{{ route('superadmin.admin_instansi.index') }}" method="GET" class="flex flex-wrap items-end gap-3 border-b border-slate-100 p-5">
-            <label class="grid min-w-48 flex-1 gap-2 text-xs font-semibold text-slate-500">Cari admin<input type="search" name="cari" value="{{ request('cari') }}" maxlength="100" placeholder="Nama atau email admin" class="rounded-lg border border-slate-200 px-3 py-2.5 text-slate-700"></label>
-            <button type="submit" class="cursor-pointer rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Cari</button>
-            @if (request()->filled('cari'))<a href="{{ route('superadmin.admin_instansi.index') }}" class="px-3 py-2.5 text-xs font-semibold text-slate-500 hover:text-blue-700">Reset</a>@endif
-        </form>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs [&_th]:px-5 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-slate-400 [&_td]:px-5 [&_td]:py-4">
-                <thead class="bg-slate-50"><tr><th scope="col">Admin</th><th scope="col">Instansi</th><th scope="col">Status akun</th><th scope="col">Aksi</th></tr></thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse ($adminInstansi as $admin)
-                        <tr>
-                            <td class="min-w-48"><p class="font-semibold">{{ $admin->name }}</p><p class="mt-1 text-slate-400">{{ $admin->email }}</p></td>
-                            <td>{{ $admin->instansi?->nama_instansi ?? 'Belum ditentukan' }}</td>
-                            <td><span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $admin->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700' }}">{{ $admin->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
-                            <td><div class="flex items-center gap-3 whitespace-nowrap">
-                                <a href="{{ route('superadmin.admin_instansi.show', $admin) }}" class="font-semibold text-blue-700 hover:underline">Detail</a>
-                                <a href="{{ route('superadmin.admin_instansi.edit', $admin) }}" class="font-semibold text-slate-600 hover:underline">Edit</a>
-                                <form method="POST" action="{{ route('superadmin.admin_instansi.destroy', $admin) }}" onsubmit="return confirm('Hapus akun ini? Akun yang memiliki riwayat terkait tidak dapat dihapus.');">@csrf @method('DELETE')<button type="submit" class="cursor-pointer font-semibold text-red-600 hover:underline" aria-label="Hapus akun {{ $admin->name }}">Hapus</button></form>
-                            </div></td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="4" class="text-center text-slate-400">Belum ada Admin Instansi yang sesuai dengan pencarian.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <section class="grid gap-5 text-slate-800">
+        <div class="flex flex-wrap items-end justify-between gap-4"><div><p class="text-[10px] font-bold uppercase tracking-wide text-blue-700">Pengelolaan akses instansi</p><h1 class="mt-1 text-2xl font-extrabold tracking-tight">Admin Instansi</h1><p class="mt-1 text-sm text-slate-500">Kelola akun Pemerintah Daerah yang menangani laporan SafeRuas.</p></div><a href="{{ route('superadmin.admin_instansi.create') }}" class="inline-flex min-h-11 items-center rounded-xl bg-blue-600 px-4 text-xs font-bold text-white hover:bg-blue-700">+ Tambah Admin Instansi</a></div>
+        <div class="grid gap-3 sm:grid-cols-3">
+            @foreach ([['Total akun', $ringkasan->total, 'bg-blue-50 text-blue-700'], ['Akun aktif', $ringkasan->aktif, 'bg-emerald-50 text-emerald-700'], ['Akun nonaktif', $ringkasan->nonaktif, 'bg-slate-100 text-slate-600']] as [$label, $jumlah, $warna])
+                <article class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div><p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ $label }}</p><p class="mt-2 text-3xl font-extrabold">{{ number_format($jumlah, 0, ',', '.') }}</p></div><span class="grid size-10 place-items-center rounded-xl {{ $warna }}" aria-hidden="true">●</span></article>
+            @endforeach
         </div>
-        <div class="border-t border-slate-100 p-5">{{ $adminInstansi->links() }}</div>
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="Daftar Admin Instansi">
+            <form action="{{ route('superadmin.admin_instansi.index') }}" method="GET" class="flex flex-wrap items-end gap-3 border-b border-slate-100 p-4"><label class="grid min-w-48 flex-1 gap-1.5 text-[11px] font-semibold text-slate-500">Cari admin atau instansi<input type="search" name="cari" value="{{ request('cari') }}" maxlength="100" placeholder="Nama, email, atau instansi" class="min-h-10 rounded-xl border-0 bg-[#eef3ff] px-3 text-xs text-slate-700 focus:ring-2 focus:ring-blue-500"></label><label class="grid gap-1.5 text-[11px] font-semibold text-slate-500">Status akun<select name="status" class="min-h-10 rounded-xl border-0 bg-[#eef3ff] px-3 text-xs text-slate-700 focus:ring-2 focus:ring-blue-500"><option value="">Semua status</option><option value="aktif" @selected(request('status') === 'aktif')>Aktif</option><option value="nonaktif" @selected(request('status') === 'nonaktif')>Nonaktif</option></select></label><button type="submit" class="min-h-10 cursor-pointer rounded-xl bg-blue-600 px-4 text-xs font-bold text-white hover:bg-blue-700">Terapkan</button>@if (request()->hasAny(['cari', 'status']))<a href="{{ route('superadmin.admin_instansi.index') }}" class="inline-flex min-h-10 items-center rounded-xl border border-slate-200 px-4 text-xs font-semibold text-slate-600">Reset</a>@endif</form>
+            <div class="overflow-x-auto"><table class="w-full min-w-[700px] text-left text-xs [&_th]:bg-[#f0f4ff] [&_th]:px-4 [&_th]:py-3 [&_th]:text-[10px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wide [&_th]:text-slate-500 [&_td]:border-t [&_td]:border-slate-100 [&_td]:px-4 [&_td]:py-4"><thead><tr><th scope="col">Pejabat / Admin</th><th scope="col">Instansi</th><th scope="col">Terdaftar</th><th scope="col">Status akun</th><th scope="col">Aksi</th></tr></thead><tbody>
+                @forelse ($adminInstansi as $admin)
+                    <tr class="hover:bg-slate-50/70"><td><div class="flex items-center gap-3"><span class="grid size-10 place-items-center rounded-xl bg-blue-50 font-bold text-blue-700">{{ mb_strtoupper(mb_substr($admin->name, 0, 1)) }}</span><span><span class="block font-semibold">{{ $admin->name }}</span><span class="mt-1 block text-slate-500">{{ $admin->email }}</span></span></div></td><td class="font-medium">{{ $admin->instansi?->nama_instansi ?? 'Belum ditentukan' }}</td><td class="whitespace-nowrap text-slate-500">{{ $admin->created_at?->format('d M Y') ?? '-' }}</td><td><span class="rounded-full px-2.5 py-1 text-[10px] font-semibold {{ $admin->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">{{ $admin->is_active ? 'Aktif' : 'Nonaktif' }}</span></td><td><div class="flex items-center gap-3 whitespace-nowrap"><a href="{{ route('superadmin.admin_instansi.show', $admin) }}" class="font-semibold text-blue-700 hover:underline">Detail</a><a href="{{ route('superadmin.admin_instansi.edit', $admin) }}" class="font-semibold text-slate-600 hover:underline">Edit</a><form method="POST" action="{{ route('superadmin.admin_instansi.destroy', $admin) }}" onsubmit="return confirm('Hapus akun ini? Akun yang memiliki riwayat terkait tidak dapat dihapus.');">@csrf @method('DELETE')<button type="submit" class="cursor-pointer font-semibold text-red-600 hover:underline" aria-label="Hapus akun {{ $admin->name }}">Hapus</button></form></div></td></tr>
+                @empty
+                    <tr><td colspan="5" class="px-4 py-12 text-center text-slate-500">Belum ada Admin Instansi yang sesuai dengan pencarian.</td></tr>
+                @endforelse
+            </tbody></table></div>
+            <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-4 text-xs text-slate-500"><span>Menampilkan {{ $adminInstansi->firstItem() ?? 0 }}–{{ $adminInstansi->lastItem() }} dari {{ $adminInstansi->total() }} admin</span>{{ $adminInstansi->links() }}</div>
+        </section>
     </section>
 @endsection

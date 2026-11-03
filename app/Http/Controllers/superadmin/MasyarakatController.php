@@ -15,6 +15,7 @@ class MasyarakatController extends Controller
     {
         $filters = $request->validate([
             'cari' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:aktif,nonaktif'],
         ]);
 
         $query = User::query()->where('role', 'masyarakat')->withCount([
@@ -29,9 +30,24 @@ class MasyarakatController extends Controller
             });
         }
 
-        $masyarakat = $query->orderBy('name')->orderBy('id')->paginate(15)->withQueryString();
+        if (($filters['status'] ?? null) === 'aktif') {
+            $query->where('is_active', true);
+        } elseif (($filters['status'] ?? null) === 'nonaktif') {
+            $query->where('is_active', false);
+        }
 
-        return view('superadmin.masyarakat.index', compact('masyarakat'));
+        $masyarakat = $query->orderBy('name')->orderBy('id')->paginate(15)->withQueryString();
+        $jumlahPengguna = User::query()
+            ->where('role', 'masyarakat')
+            ->selectRaw('COUNT(*) AS total, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS aktif, SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) AS nonaktif')
+            ->first();
+        $ringkasan = (object) [
+            'total' => (int) ($jumlahPengguna->total ?? 0),
+            'aktif' => (int) ($jumlahPengguna->aktif ?? 0),
+            'nonaktif' => (int) ($jumlahPengguna->nonaktif ?? 0),
+        ];
+
+        return view('superadmin.masyarakat.index', compact('masyarakat', 'ringkasan'));
     }
 
     public function show(User $user): View

@@ -24,13 +24,21 @@
 .report-map-pin--menunggu { background: #d97706; }
 .report-map-pin--diproses { background: #2563eb; }
 .report-map-pin--selesai { background: #059669; }
+#admin-report-map .report-map-pin--menunggu { background: #ef4444; }
+#admin-laporan-map .report-map-pin--menunggu { background: #ef4444; }
 
 #report-map,
-#report-map .leaflet-popup-content {
+#admin-report-map,
+#admin-laporan-map,
+#report-map .leaflet-popup-content,
+#admin-report-map .leaflet-popup-content,
+#admin-laporan-map .leaflet-popup-content {
     font-family: inherit;
 }
 
-#report-map .leaflet-control-layers {
+#report-map .leaflet-control-layers,
+#admin-report-map .leaflet-control-layers,
+#admin-laporan-map .leaflet-control-layers {
     padding: 10px 12px;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
@@ -39,35 +47,49 @@
     font: inherit;
 }
 
-#report-map .leaflet-control-layers label {
+#report-map .leaflet-control-layers label,
+#admin-report-map .leaflet-control-layers label,
+#admin-laporan-map .leaflet-control-layers label {
     padding: 4px 0;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
 }
 
-#report-map .leaflet-control-layers-selector {
+#report-map .leaflet-control-layers-selector,
+#admin-report-map .leaflet-control-layers-selector,
+#admin-laporan-map .leaflet-control-layers-selector {
     margin-right: 5px;
     accent-color: #2563eb;
 }
 
-#report-map .leaflet-bottom.leaflet-right {
+#report-map .leaflet-bottom.leaflet-right,
+#admin-report-map .leaflet-bottom.leaflet-right,
+#admin-laporan-map .leaflet-bottom.leaflet-right {
     max-width: 100%;
 }
 
-#report-map .leaflet-control-attribution {
+#report-map .leaflet-control-attribution,
+#admin-report-map .leaflet-control-attribution,
+#admin-laporan-map .leaflet-control-attribution {
     max-width: 100%;
     overflow-wrap: anywhere;
 }
 
 #report-map .leaflet-popup-content-wrapper,
-#report-map .leaflet-popup-tip {
+#report-map .leaflet-popup-tip,
+#admin-report-map .leaflet-popup-content-wrapper,
+#admin-report-map .leaflet-popup-tip,
+#admin-laporan-map .leaflet-popup-content-wrapper,
+#admin-laporan-map .leaflet-popup-tip {
     background: #fff;
     color: #172b4d;
     box-shadow: 0 4px 24px #172b4d30;
 }
 
-#report-map .leaflet-popup-content {
+#report-map .leaflet-popup-content,
+#admin-report-map .leaflet-popup-content,
+#admin-laporan-map .leaflet-popup-content {
     margin: 0;
 }
 

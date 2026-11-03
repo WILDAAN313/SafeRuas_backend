@@ -5,21 +5,25 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Laporan;
 use App\Models\RiwayatStatusLaporan;
+use App\Support\IndramayuBoundary;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class LaporanController extends Controller
 {
-    public function index(Request $request): View
+    private const KATEGORI_LAPORAN = ['Kerusakan Jalan', 'Kerusakan Rambu'];
+
+    public function index(Request $request, IndramayuBoundary $boundary): View
     {
         $instansiId = $request->user()->instansi_id;
         $filters = $request->validate([
             'cari' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', 'in:menunggu,diproses,selesai'],
-            'kategori' => ['nullable', 'string', 'max:100'],
+            'kategori' => ['nullable', Rule::in(self::KATEGORI_LAPORAN)],
         ]);
 
         $query = DB::table('laporan')
@@ -32,6 +36,9 @@ class LaporanController extends Controller
                 'laporan.kategori',
                 'laporan.alamat_lokasi',
                 'laporan.status',
+                'laporan.latitude',
+                'laporan.longitude',
+                'laporan.foto',
                 'laporan.created_at',
                 'users.name as nama_pelapor',
                 'users.email as email_pelapor'
@@ -43,7 +50,12 @@ class LaporanController extends Controller
             $query->where(function ($builder) use ($search): void {
                 $builder->where('laporan.judul', 'like', "%{$search}%")
                     ->orWhere('laporan.kategori', 'like', "%{$search}%")
+                    ->orWhere('laporan.alamat_lokasi', 'like', "%{$search}%")
                     ->orWhere('users.name', 'like', "%{$search}%");
+
+                if (ctype_digit($search)) {
+                    $builder->orWhere('laporan.id', (int) $search);
+                }
             });
         }
 
@@ -61,6 +73,18 @@ class LaporanController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $laporanPeta = $laporan->getCollection()
+            ->map(fn (object $item): array => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'kategori' => $item->kategori,
+                'status' => $item->status,
+                'alamat' => $item->alamat_lokasi,
+                'latitude' => is_numeric($item->latitude) ? (float) $item->latitude : null,
+                'longitude' => is_numeric($item->longitude) ? (float) $item->longitude : null,
+                'url' => route('admin.laporan.show', $item->id),
+            ]);
+
         $jumlahStatus = DB::table('laporan')
             ->where('instansi_id', $instansiId)
             ->select('status', DB::raw('COUNT(*) as jumlah'))
@@ -72,16 +96,13 @@ class LaporanController extends Controller
         $diproses = (int) ($jumlahStatus['diproses'] ?? 0);
         $selesai = (int) ($jumlahStatus['selesai'] ?? 0);
 
-        $kategoriList = DB::table('laporan')
-            ->where('instansi_id', $instansiId)
-            ->whereNotNull('kategori')
-            ->where('kategori', '!=', '')
-            ->distinct()
-            ->orderBy('kategori')
-            ->pluck('kategori');
+        $regionBounds = $boundary->bounds();
+        $kategoriList = self::KATEGORI_LAPORAN;
 
         return view('admin.laporan.index', compact(
             'laporan',
+            'laporanPeta',
+            'regionBounds',
             'totalLaporan',
             'menunggu',
             'diproses',

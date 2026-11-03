@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/admin-dashboard.js',
+                'resources/js/admin-dashboard-map.js',
                 'resources/js/admin-laporan.js',
                 'resources/js/superadmin-map.js',
             ],

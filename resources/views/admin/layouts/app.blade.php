@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') | SafeRuas</title>
+    <img src="{{ asset('picture/logo.png') }}" alt="SafeRuas" class="hidden">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,15 +15,16 @@
 <div class="min-h-screen">
     <aside class="fixed inset-y-0 left-0 z-[100] flex w-[250px] flex-col overflow-y-auto border-r border-[#e8edf5] bg-white px-4 pt-[25px] pb-[15px] transition-transform duration-300 ease-in-out max-[1000px]:w-[220px] max-[800px]:w-[250px] max-[800px]:-translate-x-full data-[open]:max-[800px]:translate-x-0" id="sidebar">
         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-[11px] px-[10px] pb-[30px] text-inherit no-underline">
-            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#2563eb] text-white">
-                <svg class="h-[25px] w-[25px]" viewBox="0 0 24 24" fill="none">
-                    <path d="M3 18L8.5 7L12 14L15 8L21 20H3Z" fill="currentColor"/>
-                    <path d="M4 21H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </span>
+           <span class="grid h-10 w-10 shrink-0 place-items-center">
+    <img
+        src="{{ asset('picture/logo.png') }}"
+        alt="Logo SafeRuas"
+        class="h-10 w-10 object-contain"
+    >
+</span>
             <span>
                 <span class="block text-[19px] font-extrabold">SafeRuas</span>
-                <span class="mt-[3px] block text-[9px] tracking-[1.5px] text-[#98a4b7]">ADMINISTRATOR</span>
+                <span class="mt-[3px] block text-[9px] tracking-[1.5px] text-[#98a4b7]">Instansi</span>
             </span>
         </a>
 
@@ -33,13 +34,13 @@
                 <span class="w-5 text-center text-[19px]">▦</span><span>Dashboard</span>
             </a>
             <a href="{{ route('admin.laporan.index') }}" class="flex items-center gap-[13px] rounded-[10px] p-[13px] text-xs font-semibold no-underline {{ request()->routeIs('admin.laporan.*') ? 'bg-[#eff6ff] text-[#2563eb] shadow-[inset_3px_0_#2563eb]' : 'text-[#77859a] hover:bg-[#eff6ff] hover:text-[#2563eb]' }}">
-                <span class="w-5 text-center text-[19px]">◤</span><span>Data Laporan</span>
-            </a>
+                <span class="w-5 text-center text-[19px]">◤</span><span>Manajemen Laporan</span>
+            {{-- </a>
             @if (Route::has('admin.penugasan.index'))
                 <a href="{{ route('admin.penugasan.index') }}" class="flex items-center gap-[13px] rounded-[10px] p-[13px] text-xs font-semibold no-underline {{ request()->routeIs('admin.penugasan.*') ? 'bg-[#eff6ff] text-[#2563eb] shadow-[inset_3px_0_#2563eb]' : 'text-[#77859a] hover:bg-[#eff6ff] hover:text-[#2563eb]' }}">
                     <span class="w-5 text-center text-[19px]">◎</span><span>Penugasan Petugas</span>
                 </a>
-            @endif
+            @endif --}}
             @if (Route::has('admin.statistik.index'))
                 <a href="{{ route('admin.statistik.index') }}" class="flex items-center gap-[13px] rounded-[10px] p-[13px] text-xs font-semibold no-underline {{ request()->routeIs('admin.statistik.*') ? 'bg-[#eff6ff] text-[#2563eb] shadow-[inset_3px_0_#2563eb]' : 'text-[#77859a] hover:bg-[#eff6ff] hover:text-[#2563eb]' }}">
                     <span class="w-5 text-center text-[19px]">▥</span><span>Statistik</span>

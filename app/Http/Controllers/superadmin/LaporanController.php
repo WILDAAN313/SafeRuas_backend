@@ -39,7 +39,7 @@ class LaporanController extends Controller
         }
 
         $laporan = $query->latest()->orderByDesc('id')
-            ->paginate(15, ['id', 'user_id', 'judul', 'kategori', 'alamat_lokasi', 'status', 'created_at'])
+            ->paginate(15, ['id', 'user_id', 'judul', 'kategori', 'foto', 'alamat_lokasi', 'status', 'created_at'])
             ->withQueryString();
         $kategoriList = Laporan::query()
             ->withinIndramayu()

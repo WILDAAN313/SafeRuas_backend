@@ -84,12 +84,12 @@
                     @if ($laporan->latitude !== null && $laporan->longitude !== null)
                         <div class="mt-[22px] flex flex-wrap gap-2.5">
                             <a
-                                href="https://www.google.com/maps?q={{ $laporan->latitude }},{{ $laporan->longitude }}"
+                                href="https://www.openstreetmap.org/?mlat={{ $laporan->latitude }}&mlon={{ $laporan->longitude }}#map=17/{{ $laporan->latitude }}/{{ $laporan->longitude }}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="inline-flex min-h-[42px] items-center justify-center rounded-[10px] border-0 bg-[#2563eb] px-4 py-2.5 text-xs font-semibold text-white no-underline transition-colors hover:bg-[#1d4ed8] hover:text-white max-[600px]:flex-1"
                             >
-                                Buka Lokasi di Google Maps
+                                Buka Lokasi di OpenStreetMap
                             </a>
                         </div>
                     @endif
@@ -130,7 +130,7 @@
                     <div class="grid grid-cols-[115px_minmax(0,1fr)] gap-3 text-xs leading-[1.6] max-[600px]:grid-cols-[95px_minmax(0,1fr)]">
                         <div class="text-[#8491a5]">Kategori</div>
                         <div class="font-semibold text-[#34445e] [overflow-wrap:anywhere]">
-                            {{ ucfirst($laporan->kategori ?? 'Lainnya') }}
+                            {{ $laporan->kategori ?: 'Kategori belum tersedia' }}
                         </div>
                     </div>
 
