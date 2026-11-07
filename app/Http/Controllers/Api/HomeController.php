@@ -4,82 +4,69 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Laporan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    public function index(Request $request)
+    // SESUAIKAN dengan nilai status yang dipakai dashboard admin.
+    private const STATUS_MENUNGGU = ['menunggu'];
+
+    // Laporan yang sudah lolos verifikasi (termasuk yang sudah ditangani)
+    private const STATUS_TERVERIFIKASI = ['terverifikasi', 'diproses', 'diperbaiki', 'selesai'];
+
+    private const STATUS_SELESAI = ['diperbaiki', 'selesai'];
+
+    // Laporan yang boleh tampil di "Kondisi Saat Ini": sudah diverifikasi, belum selesai
+    private const STATUS_TAMPIL_SEKITAR = ['terverifikasi', 'diproses'];
+
+    private const NEARBY_RADIUS_KM = 2;
+    private const NEARBY_LIMIT = 10;
+
+    public function index(Request $request): JsonResponse
     {
-        // Identitas pengguna berdasarkan token Sanctum
         $userId = $request->user()->id;
 
-        // Koordinat GPS dari Flutter
         $lat = $request->query('lat');
         $lon = $request->query('lon');
-        
-        // STATISTIK LAPORAN PENGGUNA
 
-        $userReports = Laporan::where('user_id', $userId);
+        // STATISTIK LAPORAN PENGGUNA (satu query)
+        $counts = Laporan::where('user_id', $userId)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-        $total = (clone $userReports)->count();
+        $sum = fn (array $statuses) => (int) $counts->only($statuses)->sum();
 
-        // Sesuaikan nilai status dengan database kamu
-        $menunggu = (clone $userReports)
-            ->where('status', 'menunggu')
-            ->count();
-
-        $terverifikasi = (clone $userReports)
-            ->where('status', 'terverifikasi')
-            ->count();
-
-        $diperbaiki = (clone $userReports)
-            ->whereIn('status', ['diperbaiki', 'selesai'])
-            ->count();
-
-        // LAPORAN TERKINI MILIK PENGGUNA
-        $recentReports = (clone $userReports)
+        // LAPORAN TERKINI MILIK PENGGUNA (semua status, supaya user lihat progresnya)
+        $recentReports = Laporan::where('user_id', $userId)
             ->latest()
             ->limit(5)
             ->get()
-            ->map(function ($laporan) use ($request) {
+            ->map(fn (Laporan $laporan) => [
+                'id'       => $laporan->id,
+                'judul'    => $laporan->judul,
+                'alamat'   => $laporan->alamat_lokasi,
+                'kategori' => $laporan->kategori,
+                'status'   => $laporan->status,
+                'foto'     => $this->fotoUrl($request, $laporan->foto),
+                'tanggal'  => $laporan->created_at?->format('d M Y'),
+            ])
+            ->values();
 
-                return [
-                    'id' => $laporan->id,
-                    'judul' => $laporan->judul,
-                    'alamat' => $laporan->alamat_lokasi,
-                    'kategori' => $laporan->kategori,
-                    'status' => $laporan->status,
-
-                    // Foto disimpan di Laravel Storage
-                    'foto' => $laporan->foto
-                        ? $request->getSchemeAndHttpHost()
-                            . '/storage/' . ltrim($laporan->foto, '/')
-                        : null,
-
-                    'tanggal' => $laporan->created_at
-                        ? $laporan->created_at->format('d M Y')
-                        : null,
-                ];
-            });
-
-        // KONDISI SEKITAR DARI SEMUA PENGGU
+        // KONDISI SEKITAR (semua pengguna, hanya yang sudah diverifikasi)
         $nearby = collect();
 
         if (is_numeric($lat) && is_numeric($lon)) {
-
             $lat = (float) $lat;
             $lon = (float) $lon;
 
-            if (
-                $lat >= -90 && $lat <= 90 &&
-                $lon >= -180 && $lon <= 180
-            ) {
-
+            if ($lat >= -90 && $lat <= 90 && $lon >= -180 && $lon <= 180) {
                 $nearby = Laporan::query()
                     ->withinIndramayu()
+                    ->whereIn('status', self::STATUS_TAMPIL_SEKITAR)
                     ->whereNotNull('latitude')
                     ->whereNotNull('longitude')
-
                     ->select([
                         'id',
                         'judul',
@@ -88,7 +75,6 @@ class HomeController extends Controller
                         'status',
                         'foto',
                     ])
-
                     ->selectRaw(
                         '(6371 * ACOS(
                             LEAST(1, GREATEST(-1,
@@ -101,50 +87,45 @@ class HomeController extends Controller
                         )) AS jarak_km',
                         [$lat, $lon, $lat]
                     )
-
-                    ->having('jarak_km', '<=', 2)
+                    ->having('jarak_km', '<=', self::NEARBY_RADIUS_KM)
                     ->orderBy('jarak_km')
-                    ->limit(10)
+                    ->limit(self::NEARBY_LIMIT)
                     ->get()
-
-                    ->map(function ($laporan) use ($request) {
-
-                        return [
-                            'id' => $laporan->id,
-                            'judul' => $laporan->judul,
-                            'alamat' => $laporan->alamat_lokasi,
-                            'kategori' => $laporan->kategori,
-                            'status' => $laporan->status,
-
-                            'foto' => $laporan->foto
-                                ? $request->getSchemeAndHttpHost()
-                                    . '/storage/' . ltrim($laporan->foto, '/')
-                                : null,
-
-                            'jarak_km' => round(
-                                (float) $laporan->jarak_km,
-                                2
-                            ),
-                        ];
-                    });
+                    ->map(fn (Laporan $laporan) => [
+                        'id'       => $laporan->id,
+                        'judul'    => $laporan->judul,
+                        'alamat'   => $laporan->alamat_lokasi,
+                        'kategori' => $laporan->kategori,
+                        'status'   => $laporan->status,
+                        'foto'     => $this->fotoUrl($request, $laporan->foto),
+                        'jarak_km' => round((float) $laporan->jarak_km, 2),
+                    ])
+                    ->values();
             }
         }
 
-        // KIRIM DATA KE FLUTTER
         return response()->json([
             'success' => true,
             'message' => 'Data Home berhasil diambil',
 
             'stats' => [
-                'total' => $total,
-                'terverifikasi' => $terverifikasi,
-                'diperbaiki' => $diperbaiki,
-                'menunggu' => $menunggu,
+                'total'         => (int) $counts->sum(),
+                'terverifikasi' => $sum(self::STATUS_TERVERIFIKASI),
+                'diperbaiki'    => $sum(self::STATUS_SELESAI),
+                'menunggu'      => $sum(self::STATUS_MENUNGGU),
             ],
 
             'recent_reports' => $recentReports,
-
-            'nearby' => $nearby,
+            'nearby'         => $nearby,
         ]);
+    }
+
+    private function fotoUrl(Request $request, ?string $foto): ?string
+    {
+        if (! $foto) {
+            return null;
+        }
+
+        return $request->getSchemeAndHttpHost().'/storage/'.ltrim($foto, '/');
     }
 }
